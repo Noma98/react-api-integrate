@@ -1,28 +1,55 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useEffect, useReducer } from 'react'
 import axios from 'axios';
 
+const initialState = {
+    loading: false,
+    data: null,
+    error: null
+};
+
+function reducer(state, action) {
+    switch (action.type) {
+        case 'LOADING':
+            return {
+                loading: true,
+                data: null,
+                error: null
+            }
+        case 'SUCCESS':
+            return {
+                loading: false,
+                data: action.data,
+                error: null
+            }
+        case 'ERROR':
+            return {
+                loading: false,
+                data: null,
+                error: action.error
+            }
+        default:
+            throw new Error('알 수 없는 액션 타입');
+    }
+};
+
 function Users() {
-    const [users, setUsers] = useState(null);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
-    const fetchUsers = useCallback(async () => {
+    const [state, dispatch] = useReducer(reducer, initialState);
+    const { data: users, loading, error } = state;
+    const fetchUsers = async () => {
+        dispatch({ type: 'LOADING' });
         try {
-            setError(null);
-            setUsers(null);
-            setLoading(true);
             const response = await axios.get(
                 'https://jsonplaceholder.typicode.com/users'
             );
-            setUsers(response.data);
-        } catch (err) {
-            setError(err);
+            dispatch({ type: 'SUCCESS', data: response.data });
+        } catch (error) {
+            dispatch({ type: 'ERROR', error })
         }
-        setLoading(false);
-    }, []);
+    };
 
     useEffect(() => {
         fetchUsers();
-    }, [fetchUsers]);
+    }, []);
 
     if (loading) return <div>로딩중</div>
     if (error) return <div>에러 발생</div>
