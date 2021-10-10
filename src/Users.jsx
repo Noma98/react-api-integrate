@@ -1,22 +1,20 @@
 import React, { useState } from 'react'
-import axios from 'axios';
-import { useAsync } from 'react-async';
 import User from './User';
+import { useUsersState, useUsersDispatch, getUsers } from './usersContext';
 
-
-async function getUsers() {
-    const response = await axios.get(
-        'https://jsonplaceholder.typicode.com/users'
-    );
-    return response.data;
-}
 function Users() {
-    const { data: users, error, isLoading, run } = useAsync({ deferFn: getUsers });
+    const state = useUsersState();
+    const dispatch = useUsersDispatch();
+
+    const { data: users, error, loading } = state.users;
+    const fetchData = () => {
+        getUsers(dispatch);
+    }
     const [userId, setUserId] = useState(null);
 
-    if (isLoading) return <div>로딩중</div>
+    if (loading) return <div>로딩중</div>
     if (error) return <div>에러 발생</div>
-    if (!users) return <button onClick={run}>불러오기</button>;
+    if (!users) return <button onClick={fetchData}>불러오기</button>;
     return (
         <>
             <ul>
@@ -27,7 +25,7 @@ function Users() {
                 )}
                 {userId && <User id={userId} />}
             </ul>
-            <button onClick={run}>다시 불러오기</button>
+            <button onClick={fetchData}>다시 불러오기</button>
         </>
     )
 }
